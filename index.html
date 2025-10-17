@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informe MECUN</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* --- ESTILOS ORIGINALES Y AJUSTES DE ANIMACIÓN --- */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--g:#28A745;--dg:#1e7e34;--y:#FFC107;--r:#DC3545; --b:#007BFF; --p:#6f42c1;}
+body{font-family:Arial,sans-serif;background:#fff;color:#212529;line-height:1.6;-webkit-text-size-adjust:100%;}
+body.modal-open { overflow: hidden; } /* Evita scroll del fondo */
+header{background:var(--g);color:white;padding:2rem}
+h1{font-size:2rem;margin-bottom:0.5rem}
+nav{background:var(--dg);display:flex;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+.nav-btn{background:0;border:none;color:white;padding:1rem;cursor:pointer;font-size:0.85rem;border-bottom:3px solid transparent; transition: all 0.3s ease;}
+.nav-btn:hover{background:rgba(0,0,0,0.1); transform: translateY(-2px);}
+.nav-btn.active{border-bottom-color:var(--y);font-weight:bold}
+.container{max-width:1200px;margin:0 auto;padding:2rem}
+.section{display:none}
+.section.active{display:block}
+.card{background:white;border-radius:8px;padding:2rem;margin-bottom:2rem;border-left:4px solid var(--g);box-shadow:0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;}
+.card:hover{transform: translateY(-5px); box-shadow: 0 6px 16px rgba(0,0,0,0.12);}
+.card h2{color:var(--g);font-size:1.8rem;margin-bottom:1rem}
+.card h3{color:var(--dg);font-size:1.3rem;margin:1.5rem 0 1rem}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem;margin:2rem 0}
+.stat-box{color:white;padding:1.5rem;border-radius:8px;text-align:center; transition: transform 0.3s ease, box-shadow 0.3s ease;}
+.stat-box:hover{transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.2);}
+.stat-box.red{background:linear-gradient(135deg,var(--r),#c82333)}
+.stat-box.yellow{background:linear-gradient(135deg,var(--y),#e0a800)}
+.stat-box.green{background:linear-gradient(135deg,var(--g),#1e7e34)}
+.stat-number{font-size:2rem;font-weight:bold}
+table{width:100%;border-collapse:collapse;margin:0;font-size:0.85rem}
+th,td{padding:0.7rem;border-bottom:1px solid #dee2e6; text-align: left;}
+th{background:var(--g);color:white;padding:0.8rem;text-align:left}
+tbody tr:hover { background-color: #f5f5f5; }
+.alert-box{background:#f8d7da;border-left:4px solid var(--r);padding:1.5rem;margin:2rem 0;border-radius:4px}
+.highlight-box{background:#fff3cd;border-left:4px solid var(--y);padding:1.5rem;margin:2rem 0;border-radius:4px}
+.info-box{background:#d1ecf1;border-left:4px solid var(--b);padding:1.5rem;margin:2rem 0;border-radius:4px}
+.tabs{display:flex;gap:0.5rem;margin:1.5rem 0;flex-wrap:wrap}
+.tab-btn{background:#f8f9fa;border:2px solid var(--g);color:#212529;padding:0.6rem 1rem;border-radius:6px;cursor:pointer;font-size:0.85rem;transition: all 0.3s ease;}
+.tab-btn:hover{background:var(--g);color:white; transform: translateY(-2px);}
+.tab-btn.active{background:var(--g);color:white;font-weight:bold}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.chart-container{position:relative;height:400px;margin:2rem 0}
+footer{background:#212529;color:white;text-align:center;padding:2rem;margin-top:3rem;border-top:3px solid var(--g);font-size:0.9rem}
+.data-source-note{font-size:0.8rem;font-style:italic;text-align:right;color:#6c757d;margin-top:1rem;margin-bottom:1.5rem}
+.sub-header-row th{background-color:#f0f0f0;color:#333;font-weight:bold;text-align:center;}
+.critical-row td{background-color:#f8d7da;}
+.table-wrapper { position: relative; display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 1.5rem 0;}
+table { width: 100%; }
+
+/* --- Estilos para el Modal (Lightbox) --- */
+.modal-view{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:200;display:flex;justify-content:center;align-items:center;opacity:0;visibility:hidden;transition:opacity 0.3s ease, visibility 0.3s ease;}
+.modal-view.active{opacity:1;visibility:visible;}
+.modal-content{background:white;padding:2rem;border-radius:8px;width:95%;height:90%;overflow:auto;position:relative;transform:scale(0.9);transition:transform 0.3s ease;}
+.modal-view.active .modal-content{transform:scale(1);}
+.modal-close{position:fixed;top:15px;right:25px;font-size:2.5rem;color:#fff;cursor:pointer;line-height:1;font-weight:bold;z-index:210;}
+.expand-btn{position:absolute;top:5px;right:5px;width:30px;height:30px;background:rgba(0,0,0,0.4);color:white;border:none;border-radius:50%;cursor:pointer;display:flex;justify-content:center;align-items:center;z-index:5;opacity:0.7;transition:opacity 0.2s;}
+.expand-btn:hover{opacity:1;}
+.expand-btn svg{width:16px;height:16px;}
+.chart-container .expand-btn {top:15px; right:15px;}
+.modal-content .chart-container{height:100%;}
+
+/* --- Media Queries para Diseño Responsivo --- */
+@media (max-width: 768px) {
+    header, .card { padding: 1.5rem 1rem; }
+    .container { padding: 1rem; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.4rem; }
+    h3 { font-size: 1.2rem; }
+    .nav-btn { font-size: 0.8rem; padding: 0.8rem 0.6rem; flex-grow: 1; text-align: center; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .stat-number { font-size: 2rem; }
+    .stat-box div { font-size: 0.85rem !important; }
+    .chart-container { height: 320px; }
+    table { white-space: nowrap; }
+}
+@media (max-width: 480px) {
+    .stat-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 1.4rem; }
+    h2 { font-size: 1.3rem; }
+    .alert-box, .highlight-box, .info-box { padding: 1rem; }
+    .modal-content{padding:1.5rem 1rem;}
+}
+</style>
+</head>
+<body class="">
+<header>
+<h1>Informe Estadístico MECUN</h1>
+<p style="font-size:1.1rem;opacity:0.9">Análisis de Participación, Legitimidad y Auditoría Financiera</p>
+<p style="font-size:1.1rem;opacity:0.9">Universidad Nacional de Colombia - Octubre 2025</p>
+</header>
+
+<nav>
+<button class="nav-btn active" data-section="resumen">Resumen</button>
+<button class="nav-btn" data-section="nacional">Nacional</button>
+<button class="nav-btn" data-section="sedes">Sedes</button>
+<button class="nav-btn" data-section="representatividad">Representatividad</button>
+<button class="nav-btn" data-section="voto-blanco">Voto Blanco</button>
+<button class="nav-btn" data-section="financiero">Financiero</button>
+<button class="nav-btn" data-section="conclusiones">Conclusiones</button>
+</nav>
+
+<div class="container">
+<!-- ========= SECCIÓN RESUMEN EJECUTIVO ========= -->
+<div id="resumen" class="section active">
+<div class="card">
+<h2>Resumen Ejecutivo</h2>
+<p>Crisis profunda de participación, legitimidad y representatividad en MECUN, blindada normativamente. A continuación, la participación real por estamento:</p>
+<div class="stat-grid">
+<div class="stat-box red"><div style="font-size:0.9rem">Est. Pregrado</div><div class="stat-number">7.2%</div></div>
+<div class="stat-box red"><div style="font-size:0.9rem">Est. Posgrado</div><div class="stat-number">1.1%</div></div>
+<div class="stat-box red"><div style="font-size:0.9rem">Egresados</div><div class="stat-number">0.6%</div></div>
+<div class="stat-box yellow"><div style="font-size:0.9rem">Docentes Carrera</div><div class="stat-number">20.1%</div></div>
+<div class="stat-box red"><div style="font-size:0.9rem">Doc. No Carrera</div><div class="stat-number">9.1%</div></div>
+<div class="stat-box green"><div style="font-size:0.9rem">Administrativos</div><div class="stat-number">44.4%</div></div>
+</div>
+<p class="data-source-note">Nota: % de participación real calculado sobre el Censo Oficial. Para Egresados y Doc. No Carrera se usa el Censo MECUN por falta de datos oficiales.</p>
+<div class="alert-box"><strong>🚨 Fractura Democrática:</strong> Acuerdo 027 Art. 3.2.1.4.g: "No constituyen causales de nulidad la baja participación electoral" - blindó normativamente cualquier impugnación.</div>
+<div class="highlight-box"><strong>📊 Voto Blanco: 25.5% (Pregrado)</strong> | <strong>Gasto: $261,366,477</strong> | <strong>Costo/participante: $37,824</strong></div>
+</div>
+</div>
+
+<!-- ========= SECCIÓN NACIONAL ========= -->
+<div id="nacional" class="section">
+<div class="card">
+<h2>Participación Nacional: Censo Oficial vs MECUN</h2>
+<div class="alert-box"><strong>⚠️ Fractura Metodológica:</strong> MECUN usó "censo reducido" deliberadamente para ocultar baja participación real.</div>
+<div class="chart-container"><canvas id="ch1"></canvas></div>
+<div class="table-wrapper">
+<table>
+<tr><th>Estamento</th><th>Censo Oficial</th><th>Censo MECUN</th><th>Participantes</th><th>%/Oficial</th><th>%/MECUN</th></tr>
+<tr><td>Est. Pregrado</td><td>48,613</td><td>48,416</td><td>3,509</td><td style="color:var(--r);font-weight:bold">7.2%</td><td>7.2%</td></tr>
+<tr><td>Est. Posgrado</td><td>6,276</td><td>5,740</td><td>67</td><td style="color:var(--r);font-weight:bold">1.1%</td><td>1.2%</td></tr>
+<tr><td>Egresados</td><td>N/D</td><td>186,134</td><td>1,189</td><td>N/A</td><td style="color:var(--r);font-weight:bold">0.6%</td></tr>
+<tr><td>Doc. Carrera</td><td>3,014</td><td>2,248</td><td>606</td><td style="color:var(--y);font-weight:bold">20.1%</td><td>27.0%</td></tr>
+<tr><td>Doc. No Carrera</td><td>N/D</td><td>1,662</td><td>151</td><td>N/A</td><td style="color:var(--r);font-weight:bold">9.1%</td></tr>
+<tr><td>Administrativos</td><td>2,823</td><td>2,794</td><td>1,252</td><td style="color:var(--g);font-weight:bold">44.4%</td><td>44.8%</td></tr>
+</table>
+</div>
+<p class="data-source-note">Nota: Esta tabla compara datos del Censo Oficial con el censo ajustado de MECUN.</p>
+</div>
+</div>
+
+<!-- ========= SECCIÓN SEDES ========= -->
+<div id="sedes" class="section">
+<div class="card">
+<h2>Participación por Sede (9 Sedes)</h2>
+<div class="tabs" id="tabs-sedes">
+<button class="tab-btn active" data-tab="s1">Bogotá</button>
+<button class="tab-btn" data-tab="s2">Medellín</button>
+<button class="tab-btn" data-tab="s3">Manizales</button>
+<button class="tab-btn" data-tab="s4">Palmira</button>
+<button class="tab-btn" data-tab="s5">La Paz</button>
+<button class="tab-btn" data-tab="s6">Amazonía</button>
+<button class="tab-btn" data-tab="s7">Caribe</button>
+<button class="tab-btn" data-tab="s8">Orinoquía</button>
+<button class="tab-btn" data-tab="s9">Tumaco</button>
+</div>
+<div id="s1" class="tab-content active"><div class="table-wrapper"><h3>Bogotá</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado</td><td>7.6%</td></tr><tr><td>Est. Posgrado</td><td>1.3%</td></tr><tr><td>Doc. Carrera</td><td>27.1%</td></tr><tr><td>Doc. No Carrera</td><td>8.4%</td></tr><tr><td>Administrativos</td><td>43.1%</td></tr><tr><td>Egresados</td><td>0.8%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+<div id="s2" class="tab-content"><div class="table-wrapper"><h3>Medellín</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado</td><td>6.4%</td></tr><tr><td>Est. Posgrado</td><td>0.1%</td></tr><tr><td>Doc. Carrera</td><td>14.2%</td></tr><tr><td>Doc. No Carrera</td><td>N/A</td></tr><tr><td>Administrativos</td><td>39.7%</td></tr><tr><td>Egresados</td><td>0.4%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+<div id="s3" class="tab-content"><div class="table-wrapper"><h3>Manizales</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado</td><td>4.3%</td></tr><tr><td>Est. Posgrado</td><td>0.6%</td></tr><tr><td>Doc. Carrera</td><td>29.5%</td></tr><tr><td>Doc. No Carrera</td><td>13.2%</td></tr><tr><td>Administrativos</td><td>43.7%</td></tr><tr><td>Egresados</td><td>0.2%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+<div id="s4" class="tab-content"><div class="table-wrapper"><h3>Palmira</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado</td><td>2.2%</td></tr><tr><td>Est. Posgrado</td><td>0.6%</td></tr><tr><td>Doc. Carrera</td><td>22.1%</td></tr><tr><td>Doc. No Carrera</td><td>20.7%</td></tr><tr><td>Administrativos</td><td>63.9%</td></tr><tr><td>Egresados</td><td>0.2%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+<div id="s5" class="tab-content"><div class="table-wrapper"><h3>La Paz</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado</td><td>16.2%</td></tr><tr><td>Est. Posgrado</td><td>N/A</td></tr><tr><td>Doc. Carrera</td><td>79.2%</td></tr><tr><td>Doc. No Carrera</td><td>N/A</td></tr><tr><td>Administrativos</td><td>94.7%</td></tr><tr><td>Egresados</td><td>12.5%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+<div id="s6" class="tab-content"><div class="table-wrapper"><h3>Amazonía</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado (PEAMA/PAET)</td><td>36.4%</td></tr><tr><td>Est. Posgrado</td><td>26.9%</td></tr><tr><td>Doc. Carrera</td><td>90.9%</td></tr><tr><td>Doc. No Carrera</td><td>57.1%</td></tr><tr><td>Administrativos</td><td>86.7%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+<div id="s7" class="tab-content"><div class="table-wrapper"><h3>Caribe</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado (PEAMA/PAET)</td><td>0.0%</td></tr><tr><td>Est. Posgrado</td><td>N/A</td></tr><tr><td>Doc. Carrera</td><td>N/A</td></tr><tr><td>Doc. No Carrera</td><td>11.1%</td></tr><tr><td>Administrativos</td><td>66.7%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+<div id="s8" class="tab-content"><div class="table-wrapper"><h3>Orinoquía</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado (PEAMA/PAET)</td><td>12.2%</td></tr><tr><td>Est. Posgrado</td><td>N/A</td></tr><tr><td>Doc. Carrera</td><td>50.0%</td></tr><tr><td>Doc. No Carrera</td><td>28.0%</td></tr><tr><td>Administrativos</td><td>25.0%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+<div id="s9" class="tab-content"><div class="table-wrapper"><h3>Tumaco</h3><table><tr><th>Estamento</th><th>%</th></tr><tr><td>Est. Pregrado (PEAMA/PAET)</td><td>24.2%</td></tr><tr><td>Est. Posgrado</td><td>N/A</td></tr><tr><td>Doc. Carrera</td><td>N/A</td></tr><tr><td>Doc. No Carrera</td><td>19.4%</td></tr><tr><td>Administrativos</td><td>50.0%</td></tr></table></div><p class="data-source-note">Nota: % de participación calculado sobre el Censo MECUN.</p></div>
+</div>
+</div>
+
+<!-- ========= SECCIÓN REPRESENTATIVIDAD ========= -->
+<div id="representatividad" class="section">
+<div class="card">
+<h2>Representatividad Electoral por Sede</h2>
+<div class="highlight-box"><strong>📌 Nota:</strong> El % de respaldo se calcula sobre el Censo Electoral definido por MECUN para cada elección específica.</div>
+<div class="alert-box"><strong>🚨 Casos Críticos:</strong> Arquitectura Medellín 0.5% | Ingeniería Bogotá voto blanco>ganador | Posgrado Medellín único voto blanco | Egresados 0.12%</div>
+<div class="tabs" id="tabs-rep">
+<button class="tab-btn active" data-tab="r1">Bogotá</button>
+<button class="tab-btn" data-tab="r2">Medellín</button>
+<button class="tab-btn" data-tab="r3">Manizales</button>
+<button class="tab-btn" data-tab="r4">Palmira</button>
+<button class="tab-btn" data-tab="r5">La Paz</button>
+<button class="tab-btn" data-tab="r6">Amazonía</button>
+<button class="tab-btn" data-tab="r7">Caribe</button>
+<button class="tab-btn" data-tab="r8">Orinoquía</button>
+<button class="tab-btn" data-tab="r9">Tumaco</button>
+</div>
+<!-- BOGOTÁ -->
+<div id="r1" class="tab-content active"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento / Facultad</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th><th>Observaciones</th></tr></thead>
+<tbody>
+<tr class="sub-header-row"><th colspan="7">DOCENTES CARRERA</th></tr>
+<tr><td>Fac. Odontología</td><td>José Manuel González C.</td><td>88</td><td>48</td><td>1</td><td>54.5%</td><td>Caso de mayor respaldo.</td></tr>
+<tr><td>Fac. Derecho</td><td>Silvia Cristina Mantilla V.</td><td>58</td><td>20</td><td>0</td><td>34.5%</td><td></td></tr>
+<tr><td>Fac. Med. Vet. y Zoot.</td><td>Germán Augusto Pachón G.</td><td>53</td><td>17</td><td>6</td><td>32.1%</td><td></td></tr>
+<tr class="critical-row"><td>Fac. C. Agrarias</td><td>Nathalia Valderrama B.</td><td>52</td><td>15</td><td>22</td><td>28.8%</td><td>El voto en blanco superó a la plancha ganadora.</td></tr>
+<tr><td>Fac. C. Económicas</td><td>Luis Fernando Valenzuela J.</td><td>72</td><td>15</td><td>7</td><td>20.8%</td><td></td></tr>
+<tr><td>Fac. C. Humanas</td><td>William Díaz Villarreal</td><td>199</td><td>28</td><td>5</td><td>14.1%</td><td></td></tr>
+<tr><td>Fac. Artes</td><td>Federico Demmer C.</td><td>236</td><td>32</td><td>4</td><td>13.6%</td><td></td></tr>
+<tr class="critical-row"><td>Fac. Medicina</td><td>Mauricio Hernando Torres T.</td><td>315</td><td>34</td><td>4</td><td>10.8%</td><td>Respaldo bajo.</td></tr>
+<tr class="critical-row"><td>Fac. Ciencias</td><td>José Jairo Giraldo Gallo</td><td>434</td><td>38</td><td>28</td><td>8.8%</td><td>Respaldo ínfimo.</td></tr>
+<tr class="critical-row"><td>Fac. Ingeniería</td><td>Jaime León Aguilar Arias</td><td>252</td><td>22</td><td>17</td><td>8.7%</td><td>Respaldo ínfimo.</td></tr>
+<tr class="sub-header-row"><th colspan="7">DOCENTES NO CARRERA</th></tr>
+<tr class="critical-row"><td></td><td>Alejandro Mantilla Quijano</td><td>937</td><td>18</td><td>10</td><td>1.9%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ESTUDIANTES PREGRADO</th></tr>
+<tr><td>Fac. Med. Vet. y Zoot.</td><td>María Paula López B.</td><td>1,314</td><td>154</td><td>23</td><td>11.7%</td><td></td></tr>
+<tr><td>Fac. Derecho</td><td>Juliana Ruiz Casteblanco</td><td>1,589</td><td>161</td><td>58</td><td>10.1%</td><td></td></tr>
+<tr><td>Fac. C. Económicas</td><td>Emily Lorena González P.</td><td>2,783</td><td>199</td><td>108</td><td>7.1%</td><td></td></tr>
+<tr class="critical-row"><td>Fac. C. Humanas</td><td>Juan David Fiaga Molina</td><td>4,102</td><td>186</td><td>81</td><td>4.5%</td><td>Respaldo ínfimo.</td></tr>
+<tr class="critical-row"><td>Fac. Artes</td><td>Laura Castillo Andrade</td><td>2,672</td><td>105</td><td>28</td><td>3.9%</td><td>Respaldo ínfimo.</td></tr>
+<tr class="critical-row"><td>Fac. Ingeniería</td><td>Jonathan Stiven Ayala B.</td><td>7,113</td><td>236</td><td>268</td><td>3.3%</td><td>Voto en blanco superó al ganador. Respaldo ínfimo.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ESTUDIANTES POSGRADO</th></tr>
+<tr class="critical-row"><td></td><td>Silvia Natalia Jiménez C.</td><td>4,112</td><td>13</td><td>8</td><td>0.3%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">EGRESADOS</th></tr>
+<tr class="critical-row"><td></td><td>Nicolás Valdivieso B.</td><td>119,795</td><td>142</td><td>106</td><td>0.12%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ADMINISTRATIVOS</th></tr>
+<tr><td></td><td>Jaime Salamandra Martínez</td><td>1,776</td><td>91</td><td>35</td><td>5.1%</td><td></td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+<!-- MEDELLÍN -->
+<div id="r2" class="tab-content"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento / Facultad</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th><th>Observaciones</th></tr></thead>
+<tbody>
+<tr class="sub-header-row"><th colspan="7">DOCENTES CARRERA</th></tr>
+<tr><td>Fac. Cs. de la Vida</td><td>Carolina Montoya Ruiz</td><td>2</td><td>2</td><td>0</td><td>100.0%</td><td>Censo de solo 2 personas.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ESTUDIANTES PREGRADO</th></tr>
+<tr class="critical-row"><td>Fac. Minas</td><td>Sandra Lorena Bautista C.</td><td>6,161</td><td>199</td><td>72</td><td>3.2%</td><td>Respaldo ínfimo.</td></tr>
+<tr class="critical-row"><td>Fac. C. Agrarias</td><td>Álvaro Andrés Pulido T.</td><td>1,214</td><td>36</td><td>6</td><td>3.0%</td><td>Respaldo ínfimo.</td></tr>
+<tr class="critical-row"><td>Fac. Arquitectura</td><td>Juan David Zuleta Mira</td><td>1,164</td><td>6</td><td>3</td><td>0.5%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ESTUDIANTES POSGRADO</th></tr>
+<tr class="critical-row"><td></td><td>Voto en Blanco</td><td>907</td><td>0</td><td>1</td><td>N/A</td><td>El único voto fue en blanco.</td></tr>
+<tr class="sub-header-row"><th colspan="7">EGRESADOS</th></tr>
+<tr class="critical-row"><td></td><td>Sara Rivera Monsalve</td><td>34,935</td><td>55</td><td>13</td><td>0.16%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ADMINISTRATIVOS</th></tr>
+<tr><td></td><td>Rodrigo Orlando Lenis L.</td><td>549</td><td>74</td><td>4</td><td>13.5%</td><td></td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+<!-- MANIZALES -->
+<div id="r3" class="tab-content"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento / Facultad</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th><th>Observaciones</th></tr></thead>
+<tbody>
+<tr class="sub-header-row"><th colspan="7">DOCENTES CARRERA</th></tr>
+<tr><td>Fac. C. Exactas</td><td>Lucero Álvarez Miño</td><td>67</td><td>12</td><td>2</td><td>17.9%</td><td></td></tr>
+<tr class="critical-row"><td>Fac. Admón.</td><td>Luis Ignacio López V.</td><td>55</td><td>9</td><td>10</td><td>16.4%</td><td>El voto en blanco superó a la plancha más votada.</td></tr>
+<tr class="sub-header-row"><th colspan="7">DOCENTES NO CARRERA</th></tr>
+<tr><td></td><td>Andrés Felipe Londoño S.</td><td>136</td><td>15</td><td>0</td><td>11.0%</td><td></td></tr>
+<tr class="sub-header-row"><th colspan="7">ESTUDIANTES PREGRADO</th></tr>
+<tr class="critical-row"><td>Fac. Ing. y Arq.</td><td>Tatiana Cardona Daza</td><td>2,820</td><td>54</td><td>46</td><td>1.9%</td><td>Respaldo ínfimo.</td></tr>
+<tr class="critical-row"><td>Estudiantes (PAET)</td><td>Andrés Felipe Sánchez G.</td><td>120</td><td>3</td><td>3</td><td>2.5%</td><td>Empate con el voto en blanco.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ESTUDIANTES POSGRADO</th></tr>
+<tr class="critical-row"><td></td><td>Sergio Alejandro Quilindo C.</td><td>530</td><td>2</td><td>1</td><td>0.4%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">EGRESADOS</th></tr>
+<tr class="critical-row"><td></td><td>Erika Marulanda Correa</td><td>20,738</td><td>37</td><td>11</td><td>0.18%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ADMINISTRATIVOS</th></tr>
+<tr><td></td><td>Jaime Emigdio Jamanoy C.</td><td>199</td><td>31</td><td>8</td><td>15.6%</td><td></td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+<!-- PALMIRA -->
+<div id="r4" class="tab-content"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento / Facultad</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th><th>Observaciones</th></tr></thead>
+<tbody>
+<tr class="sub-header-row"><th colspan="7">DOCENTES CARRERA</th></tr>
+<tr><td>Fac. Ing. y Admón.</td><td>Boris Alejandro Villamil R.</td><td>67</td><td>16</td><td>7</td><td>23.9%</td><td></td></tr>
+<tr class="sub-header-row"><th colspan="7">DOCENTES NO CARRERA</th></tr>
+<tr><td></td><td>Diego Rodrigo Echeverry R.</td><td>135</td><td>18</td><td>0</td><td>13.3%</td><td></td></tr>
+<tr class="sub-header-row"><th colspan="7">ESTUDIANTES PREGRADO</th></tr>
+<tr class="critical-row"><td>Fac. Ing. y Admón.</td><td>William David Monje P.</td><td>1,589</td><td>37</td><td>18</td><td>2.3%</td><td>Respaldo ínfimo.</td></tr>
+<tr class="critical-row"><td>Fac. C. Agropecuarias</td><td>Sin Candidaturas</td><td>N/A</td><td>0</td><td>0</td><td>N/A</td><td>Posición declarada desierta.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ESTUDIANTES POSGRADO</th></tr>
+<tr class="critical-row"><td></td><td>Diego Esteban Gamboa G.</td><td>165</td><td>1</td><td>0</td><td>0.6%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">EGRESADOS</th></tr>
+<tr class="critical-row"><td></td><td>Juan Fernando Muñoz S.</td><td>9,142</td><td>10</td><td>3</td><td>0.11%</td><td>Representatividad nula.</td></tr>
+<tr class="sub-header-row"><th colspan="7">ADMINISTRATIVOS</th></tr>
+<tr><td></td><td>Ana María Casas C.</td><td>191</td><td>53</td><td>5</td><td>27.7%</td><td></td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+<!-- LA PAZ -->
+<div id="r5" class="tab-content"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th></tr></thead>
+<tbody>
+<tr><td>DOCENTES CARRERA</td><td>Giovanni Covelli Meek</td><td>48</td><td>13</td><td>0</td><td>27.1%</td></tr>
+<tr><td>ESTUDIANTES PREGRADO</td><td>María Rosa Hinojosa A.</td><td>1,262</td><td>83</td><td>14</td><td>6.6%</td></tr>
+<tr><td>EGRESADOS</td><td>Luz Elenis Torres Bertel</td><td>64</td><td>8</td><td>0</td><td>12.5%</td></tr>
+<tr><td>ADMINISTRATIVOS</td><td>Jorge Leonardo Castro M.</td><td>38</td><td>14</td><td>1</td><td>36.8%</td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+<!-- AMAZONÍA -->
+<div id="r6" class="tab-content"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th></tr></thead>
+<tbody>
+<tr><td>Docentes Carrera</td><td>Allan Andrew Wood</td><td>11</td><td>10</td><td>0</td><td>90.9%</td></tr>
+<tr><td>Docentes No Carrera</td><td>Mylson Betancourt S.</td><td>21</td><td>12</td><td>0</td><td>57.1%</td></tr>
+<tr><td>Estudiantes (PAET)</td><td>Nicolás Morales Casiano</td><td>99</td><td>18</td><td>1</td><td>18.2%</td></tr>
+<tr><td>Estudiantes (PEAMA)</td><td>Raly Lleverson Chichaco M.</td><td>140</td><td>28</td><td>10</td><td>20.0%</td></tr>
+<tr><td>Egresados (PEAMA)</td><td>Aylin Lesmacy Cárdenas C.</td><td>423</td><td>5</td><td>0</td><td>1.2%</td></tr>
+<tr><td>Administrativos</td><td>Jorhan Jonathan Durán J.</td><td>15</td><td>13</td><td>0</td><td>86.7%</td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+<!-- CARIBE -->
+<div id="r7" class="tab-content"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th></tr></thead>
+<tbody>
+<tr><td>Docentes No Carrera</td><td>John Hernando Henry D.</td><td>9</td><td>1</td><td>0</td><td>11.1%</td></tr>
+<tr><td>Egresados (PEAMA)</td><td>Lina Marcela Estrada O.</td><td>140</td><td>2</td><td>0</td><td>1.4%</td></tr>
+<tr><td>Administrativos</td><td>Johnny Giovanni Padilla H.</td><td>9</td><td>6</td><td>0</td><td>66.7%</td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+<!-- ORINOQUÍA -->
+<div id="r8" class="tab-content"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th></tr></thead>
+<tbody>
+<tr><td>Docentes Carrera</td><td>Adriana Isabel Orjuela M.</td><td>8</td><td>3</td><td>1</td><td>37.5%</td></tr>
+<tr><td>Docentes No Carrera</td><td>Carlas Lucía Castilla L.</td><td>25</td><td>7</td><td>0</td><td>28.0%</td></tr>
+<tr><td>Estudiantes (PAET)</td><td>Dayaira Sicuamia S.</td><td>170</td><td>21</td><td>0</td><td>12.4%</td></tr>
+<tr><td>Estudiantes (PEAMA)</td><td>Darcy Jirlea González C.</td><td>167</td><td>6</td><td>0</td><td>3.6%</td></tr>
+<tr><td>Egresados (PEAMA)</td><td>Oscar David Hidalgo J.</td><td>737</td><td>4</td><td>1</td><td>0.5%</td></tr>
+<tr><td>Administrativos</td><td>Javier Carreño Ortiz</td><td>12</td><td>2</td><td>1</td><td>16.7%</td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+<!-- TUMACO -->
+<div id="r9" class="tab-content"><div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento</th><th>Plancha Ganadora</th><th>Censo</th><th>Votos Ganador</th><th>Votos Blanco</th><th>% Respaldo</th></tr></thead>
+<tbody>
+<tr><td>Docentes No Carrera</td><td>Leider Camilo Cabezas C.</td><td>31</td><td>6</td><td>0</td><td>19.4%</td></tr>
+<tr><td>Estudiantes (PAET)</td><td>Juan Camilo de la Cruz</td><td>97</td><td>16</td><td>2</td><td>16.5%</td></tr>
+<tr><td>Estudiantes (PEAMA)</td><td>Jimmy Orlando García S.</td><td>205</td><td>48</td><td>2</td><td>23.4%</td></tr>
+<tr><td>Egresados (PEAMA)</td><td>Darío Aureliano Estacio M.</td><td>160</td><td>5</td><td>0</td><td>3.1%</td></tr>
+<tr><td>Administrativos</td><td>Mario Alexander Gamboa</td><td>4</td><td>2</td><td>0</td><td>50.0%</td></tr>
+</tbody>
+</table></div><p class="data-source-note">Nota: % de respaldo calculado sobre el Censo MECUN.</p>
+</div>
+</div>
+</div>
+
+<!-- ========= SECCIÓN VOTO BLANCO ========= -->
+<div id="voto-blanco" class="section">
+<div class="card">
+<h2>Voto en Blanco: Rechazo Activo por Estamento</h2>
+<div class="chart-container"><canvas id="ch2"></canvas></div>
+<div class="table-wrapper">
+<table>
+<thead><tr><th>Estamento</th><th>Participantes Totales</th><th>Votos en Blanco</th><th>% de Rechazo Activo</th></tr></thead>
+<tbody>
+<tr style="background:#f8d7da;"><td>Est. Pregrado</td><td>3,503</td><td>864</td><td style="color:var(--r);font-weight:bold">24.7%</td></tr>
+<tr><td>Doc. Carrera</td><td>606</td><td>115</td><td>19.0%</td></tr>
+<tr><td>Est. Posgrado</td><td>183</td><td>22</td><td>12.0%</td></tr>
+<tr><td>Egresados</td><td>1,189</td><td>134</td><td>11.3%</td></tr>
+<tr><td>Doc. No Carrera</td><td>151</td><td>10</td><td>6.6%</td></tr>
+<tr><td>Personal Administrativo</td><td>1,252</td><td>54</td><td>4.3%</td></tr>
+</tbody>
+</table>
+</div>
+<p class="data-source-note">Nota: El % de Rechazo Activo se calcula sobre el total de participantes de cada estamento (Censo MECUN).</p>
+</div>
+</div>
+
+<!-- ========= SECCIÓN FINANCIERO ========= -->
+<div id="financiero" class="section">
+<div class="card">
+<h2>Auditoría Financiera: Inversión Desproporcionada</h2>
+<div class="info-box">
+	<strong>Nota Metodológica Clave:</strong>
+	<ul style="margin-left: 20px; margin-top: 10px;">
+		<li>Según el <strong>Oficio N.I-0797-25</strong>, los $261M corresponden a <strong>gastos de funcionamiento</strong>.</li>
+		<li>Este análisis utiliza el <strong>Censo MECUN</strong>, que representa a los votantes habilitados. Esto permite una evaluación directa de la representatividad. Un análisis sobre el Censo Oficial completo arrojaría porcentajes de participación aún más bajos.</li>
+	</ul>
+</div>
+<div class="stat-grid">
+<div class="stat-box red"><div>Gasto Total</div><div class="stat-number">$261M</div></div>
+<div class="stat-box red"><div>Costo/Voto</div><div class="stat-number">$37,824</div></div>
+<div class="stat-box yellow"><div>Participantes</div><div class="stat-number">6,913</div></div>
+</div>
+<div class="chart-container"><canvas id="ch3"></canvas></div>
+<div class="alert-box"><strong>⚠️ ROI Negativo:</strong> $261,366,477 invertidos en viáticos, profesionales, software y divulgación SIN generar participación real. Fracaso estratégico total.</div>
+<div class="table-wrapper">
+<table>
+<tr><th>Concepto</th><th>Valor</th><th>Observación</th></tr>
+<tr><td>Gasto Total</td><td>$261,366,477</td><td>Oficio N.I-0797-25</td></tr>
+<tr><td>Participantes Totales</td><td>6,913</td><td>Todos estamentos (Censo MECUN)</td></tr>
+<tr style="background:#f8d7da"><td><strong>Costo por Participante</strong></td><td><strong>$37,824</strong></td><td>Indicador de ineficiencia crítica</td></tr>
+<tr><td>Participación Estudiantil</td><td>5.4%</td><td>Promedio ponderado</td></tr>
+<tr style="background:#f8d7da"><td><strong>ROI Democrático</strong></td><td><strong>Negativo</strong></td><td>Alta inversión, nula legitimidad</td></tr>
+</table>
+</div>
+<p class="data-source-note">Nota: Datos financieros según Oficio N.I-0797-25. Datos de participación según registros de MECUN.</p>
+</div>
+</div>
+
+<!-- ========= SECCIÓN CONCLUSIONES ========= -->
+<div id="conclusiones" class="section">
+<div class="card">
+<h2>Conclusiones: Fractura Democrática Deliberada</h2>
+<div class="alert-box"><strong>1. Crisis Estadística:</strong> 7.2% pregrado, 1.1% posgrado, 0.6% egresados. "Clamor generalizado" es falacia estadística refutada por datos.</div>
+<div class="alert-box"><strong>2. Crisis de Representatividad:</strong> Delegados electos con 0.12%-3.3% respaldo electoral. Mandato débil o nulo en múltiples casos. Voto blanco superó ganadores en Ingeniería Bogotá y C. Agrarias.</div>
+<div class="alert-box"><strong>3. Manipulación Metodológica Deliberada:</strong> Censo MECUN artificialmente reducido (egresados 186,134 vs dato oficial desconocido) oculta verdadera brecha de participación respecto universo real.</div>
+<div class="alert-box"><strong>4. BLINDAJE NORMATIVO - PUNTO CRÍTICO:</strong> <strong>Acuerdo 027 de 2025, Art. 3.2.1.4.g:</strong> "No constituyen causales de nulidad la baja participación electoral o las candidaturas (principal y suplente) únicas". Esta cláusula elimina legalmente cualquier posibilidad de impugnación por falta de legitimidad.</div>
+<div class="alert-box"><strong>5. Contradicción Deliberada entre Acuerdos:</strong> <strong>Acuerdo 003 (Art. 3):</strong> Exige "democracia deliberativa y participativa". <strong>Acuerdo 012 (Art. 2.e):</strong> Define que "legitimidad de MECUN se sustenta en vínculo activo permanente con comunidad". <strong>Acuerdo 027 (Art. 3.2.1.4.g):</strong> Declara que falta de vínculo NO es causal de nulidad. FRACTURA NORMATIVA INTENCIONAL.</div>
+<div class="alert-box"><strong>6. Rechazo Activo Manifestado:</strong> 24.7% estudiantes pregrado que participaron votaron blanco. No es abstención: es inversión deliberada de tiempo para rechazar. Crítico en contexto de baja participación.</div>
+<div class="alert-box"><strong>7. Fracaso Estratégico y Financiero Total:</strong> $261,366,477 invertidos = 6,913 participantes = $37,824 por voto. Estrategia de promoción no funcionó. Costo por participante evidencia ineficacia.</div>
+<div class="alert-box"><strong>8. Llamado a la Institucionalidad:</strong> A pesar de la evidente falta de representatividad del proceso, la Representación Profesoral recomienda a la comunidad académica <strong>NO declararse en desobediencia civil.</strong> Se debe insistir en los canales institucionales para cuestionar la validez de la MECUN, argumentando que la administración no ha escuchado el sentir mayoritario de la Universidad.</div>
+
+<h3>Recomendaciones Estratégicas Inmediatas</h3>
+<div class="highlight-box"><strong>(1) Demanda de Derogación Normativa:</strong> Solicitar al CSU eliminar Art. 3.2.1.4.g del Acuerdo 027. Argumentar que viola principios propios del Acuerdo 012 y del 003.</div>
+<div class="highlight-box"><strong>(2) Impugnación de Resultados MECUN:</strong> Presentar esta auditoría estadística como prueba de ilegitimidad de origen de toda la Mesa ante el Consejo Superior Universitario.</div>
+<div class="highlight-box"><strong>(3) Auditoría Específica de Inversión:</strong> Requerir a Control Interno auditoría detallada de $261,366,477: a quién se pagó, qué servicios reales se prestaron, por qué fracasó estrategia, responsables.</div>
+<div class="highlight-box"><strong>(4) Exigencia de Transparencia de Censos:</strong> Publicación oficial de: (a) Censo oficial por estamento, (b) Censo MECUN por estamento, (c) Acta de decisión sobre por qué difieren y razones de uso del MECUN.</div>
+<h3>Conclusión Final: La Fractura Democrática</h3>
+<p style="font-size:1.05rem;line-height:1.8;margin:1.5rem 0">Este informe demuestra irrefutablemente que el proceso MECUN tiene defectos de origen IRREPARABLES en CUATRO dimensiones simultáneamente:</p>
+<ul style="margin:1rem 0 1.5rem 2.5rem;font-size:1rem;line-height:1.8">
+<li><strong>Participación:</strong> 7.2% pregrado, 1.1% posgrado, 0.6% egresados = participación catastrófica</li>
+<li><strong>Representatividad:</strong> Delegados con 0.12%-3.3% de respaldo = mandatos nulos de origen</li>
+<li><strong>Rechazo Activo:</strong> 24.7% de participantes votaron blanco = rechazo deliberado del proceso</li>
+<li><strong>Blindaje Normativo Antidemocratico:</strong> Acuerdo 027 elimina impugnabilidad de la ilegitimidad, haciéndola irremedible</li>
+</ul>
+<p style="font-size:1.05rem;line-height:1.8;margin-top:1.5rem"><strong>La contradicción entre legalidad formal (Acuerdos 003, 012, 027) y legitimidad democrática sustantiva configura un proceso que, aunque técnicamente válido normativamente, es democráticamente NULO. La MECUN puede reformar estatutos, pero CARECE del mandato real de la comunidad para hacerlo. Su poder es legalidad sin legitimidad.</strong></p>
+</div>
+</div>
+</div>
+
+<!-- ========= MODAL PARA VISTA AMPLIADA ========= -->
+<div id="modal-view" class="modal-view">
+    <span id="modal-close" class="modal-close">&times;</span>
+    <div id="modal-content" class="modal-content"></div>
+</div>
+
+<footer>
+<p><strong>Informe Estadístico MECUN</strong></p>
+<p>Universidad Nacional de Colombia - Octubre 2025</p>
+<p>REPRESENTACIÓN PROFESORAL AL CONSEJO SUPERIOR UNIVERSITALIO</p>
+<p style="font-size:0.8rem;margin-top:1rem;font-style:italic">La Representación Profesoral agradece al equipo de apoyos por la generación de este informe.</p>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- LÓGICA DE NAVEGACIÓN Y TABS ---
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const sectionId = this.dataset.section;
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            this.classList.add('active');
+            window.scrollTo(0, 0);
+        });
+    });
+
+    document.querySelectorAll('.tabs').forEach(tabGroup => {
+        tabGroup.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+                const card = this.closest('.card');
+                card.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                card.querySelector('#' + tabId).classList.add('active');
+                this.classList.add('active');
+            });
+        });
+    });
+
+    // --- LÓGICA DE GRÁFICOS CON ANIMACIÓN DINÁMICA ---
+    const c = {red:'#DC3545', yellow:'#FFC107', green:'#28A745', blue:'#007BFF', grey:'#6c757d', teal:'#17a2b8', purple: '#6f42c1'};
+    const chartConfigs = {
+        ch1: { type: 'bar', data: {labels:['Pregrado','Posgrado','Doc.Carrera','Admin'],datasets:[{label:'%/Oficial',data:[7.2,1.1,20.1,44.4],backgroundColor:c.red},{label:'%/MECUN',data:[7.2,1.2,27,44.8],backgroundColor:c.yellow}]}, options: {responsive:true, maintainAspectRatio:false, scales:{y:{max:100, beginAtZero: true, title:{display:true, text:'% Participación'}}}, animation:{duration:1200, easing: 'easeOutQuad'}} },
+        ch2: { type: 'doughnut', data: {labels:['Pregrado','Doc. Carrera','Posgrado','Egresados','Doc. No Carrera', 'Administrativo'],datasets:[{data:[24.7,19.0,12.0,11.3,6.6,4.3],backgroundColor:[c.red, c.yellow, c.teal, c.purple, c.grey, c.green]}]}, options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}, tooltip: { callbacks: { label: function(context) { return context.label + ': ' + context.formattedValue + '%'; } } } }, animation:{duration:1200, easing: 'easeOutQuad'}} },
+        ch3: { type: 'pie', data: {labels:['Viáticos','Prof','Software','Divulgación','Otros'],datasets:[{data:[35,30,20,10,5],backgroundColor:[c.red,c.yellow,c.green,c.blue,c.grey]}]}, options: {responsive:true, maintainAspectRatio:false, plugins: { tooltip: { callbacks: { label: function(context) { return context.label + ': ' + context.formattedValue + '%'; } } } }, animation:{duration:1200, easing: 'easeOutQuad'}} }
+    };
+    let activeCharts = {};
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const chartId = entry.target.id;
+            if (entry.isIntersecting) {
+                if (activeCharts[chartId]) activeCharts[chartId].destroy();
+                activeCharts[chartId] = new Chart(document.getElementById(chartId), chartConfigs[chartId]);
+            }
+        });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('canvas').forEach(canvas => observer.observe(canvas));
+
+    // --- LÓGICA PARA EL MODAL (VISTA AMPLIADA) ---
+    const modal = document.getElementById('modal-view');
+    const modalContent = document.getElementById('modal-content');
+    const modalClose = document.getElementById('modal-close');
+
+    const setupExpandButtons = () => {
+        // Añadir íconos a tablas
+        document.querySelectorAll('.table-wrapper').forEach(wrapper => {
+            if (wrapper.querySelector('.expand-btn')) return; // Evita duplicar botones
+            const btn = document.createElement('button');
+            btn.className = 'expand-btn';
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"><path d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM64 352c-17.7 0-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96v-64c0-17.7-14.3-32-32-32zM352 448c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32v-96c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H352zM448 64c-17.7 0-32 14.3-32 32v64h-64c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V64c0-17.7-14.3-32-32-32z"/></svg>`;
+            wrapper.prepend(btn);
+            btn.addEventListener('click', () => openModal(wrapper.cloneNode(true)));
+        });
+
+        // Añadir íconos a gráficos
+        document.querySelectorAll('.chart-container').forEach(container => {
+            if (container.querySelector('.expand-btn')) return; // Evita duplicar botones
+            const btn = document.createElement('button');
+            btn.className = 'expand-btn';
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"><path d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM64 352c-17.7 0-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96v-64c0-17.7-14.3-32-32-32zM352 448c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32v-96c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H352zM448 64c-17.7 0-32 14.3-32 32v64h-64c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V64c0-17.7-14.3-32-32-32z"/></svg>`;
+            container.prepend(btn);
+            btn.addEventListener('click', () => openModal(container.cloneNode(true), true));
+        });
+    };
+    
+    const openModal = (element, isChart = false) => {
+        modalContent.innerHTML = '';
+        element.querySelector('.expand-btn').remove(); // Quitar el botón del clon
+        modalContent.appendChild(element);
+        
+        if (isChart) {
+            const canvas = element.querySelector('canvas');
+            const chartId = canvas.id;
+            // Forzar re-render del gráfico en el modal
+            if (activeCharts[chartId + '-modal']) activeCharts[chartId + '-modal'].destroy();
+            activeCharts[chartId + '-modal'] = new Chart(canvas, chartConfigs[chartId]);
+        }
+        
+        modal.classList.add('active');
+        document.body.classList.add('modal-open');
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+    };
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // Inicializar botones al cargar la página
+    setupExpandButtons();
+    // Re-inicializar botones al cambiar de pestaña (para las pestañas de representatividad)
+    document.querySelectorAll('#tabs-rep .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Pequeña espera para que el contenido del tab sea visible
+        setTimeout(setupExpandButtons, 100);
+      });
+    });
+});
+</script>
+</body>
+</html>
+
