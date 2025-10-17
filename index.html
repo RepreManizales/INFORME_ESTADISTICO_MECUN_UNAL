@@ -13,7 +13,7 @@ body{font-family:Arial,sans-serif;background:#fff;color:#212529;line-height:1.6;
 body.modal-open { overflow: hidden; } /* Evita scroll del fondo */
 header{background:var(--g);color:white;padding:2rem}
 h1{font-size:2rem;margin-bottom:0.5rem}
-nav{background:var(--dg);display:flex;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+nav{background:var(--dg);display:flex;justify-content:center;flex-wrap:wrap;position:sticky;top:0;z-index:100}
 .nav-btn{background:0;border:none;color:white;padding:1rem;cursor:pointer;font-size:0.85rem;border-bottom:3px solid transparent; transition: all 0.3s ease;}
 .nav-btn:hover{background:rgba(0,0,0,0.1); transform: translateY(-2px);}
 .nav-btn.active{border-bottom-color:var(--y);font-weight:bold}
@@ -71,6 +71,7 @@ table { width: 100%; }
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.4rem; }
     h3 { font-size: 1.2rem; }
+    nav { justify-content: space-around; }
     .nav-btn { font-size: 0.8rem; padding: 0.8rem 0.6rem; flex-grow: 1; text-align: center; }
     .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
     .stat-number { font-size: 2rem; }
